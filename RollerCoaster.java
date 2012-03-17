@@ -38,6 +38,21 @@ public class RollerCoaster implements GLEventListener {
 	private float aspect = 1;
 	
 	public RollerCoaster() {
+        glu = new GLU();
+        speedProvider = new ConstantSpeedProvider().setSpeed(1);
+        
+        for (int i = 0; i < 50; i++) {
+        	lines.add(new Line()
+        		.setP1(new Point3()
+        			.setX(i / (double) 100)
+        			.setY(i / (double) 100)
+        			.setZ(i / (double) 100))
+        		.setP2(new Point3()
+        			.setX((i + 1) / (double) 100)
+        			.setY((i + 1) / (double) 100)
+        			.setZ((i + 1) / (double) 100)));
+        }
+        
 		window = GLWindow.create(new GLCapabilities(GLProfile.getDefault()));
         window.setSize(WIDTH, HEIGHT);
         window.setVisible(true);
@@ -51,19 +66,9 @@ public class RollerCoaster implements GLEventListener {
             }
         });
         
-        glu = new GLU();
-        
         animator = new FPSAnimator(window, REFRESH_RATE);
         animator.add(window);
         animator.start();
-        
-        speedProvider = new ConstantSpeedProvider().setSpeed(1);
-        
-        for (int i = 0; i < 50; i++) {
-        	lines.add(new Line()
-        		.setP1(new Point3().setX(i / 10).setY(i / 10).setZ(i / 10))
-        		.setP2(new Point3().setX((i + 1) / 10).setY((i + 1) / 10).setZ((i + 1) / 10)));
-        }
 	}
 
 	@Override
@@ -85,7 +90,32 @@ public class RollerCoaster implements GLEventListener {
 	@Override
 	public void display(GLAutoDrawable drawable) {
 		update();
-		render(drawable);
+		
+		for (Line line : lines) {
+			Point3 p1 = line.getP1();
+			Point3 p2 = line.getP2();
+			LOGGER.info(p1.toString());
+			LOGGER.info(p2.toString());
+			
+			gl.glPushMatrix();
+			gl.glColor3i(0, 255, 0);
+			gl.glBegin(GL2.GL_LINES);
+			gl.glVertex3d(p1.getX(), p1.getY(), p1.getZ());
+			gl.glVertex3d(p2.getX(), p2.getY(), p2.getZ());
+			gl.glEnd();
+			gl.glPopMatrix();
+		}
+		
+		Point3 p1 = lines.get(pos).getP1();
+		Point3 p2 = lines.get(pos).getP2();
+		
+		gl.glPushMatrix();
+		gl.glColor3i(0, 0, 255);
+		gl.glBegin(GL2.GL_LINES);
+		gl.glVertex3d(p1.getX(), p1.getY(), p1.getZ());
+		gl.glVertex3d(p2.getX(), p2.getY(), p2.getZ());
+		gl.glEnd();
+		gl.glPopMatrix();
 	}
 
 	@Override
@@ -118,31 +148,6 @@ public class RollerCoaster implements GLEventListener {
 	private void update() {
 		pos += speedProvider.getSpeed(this);
 		pos %= 50;
-	}
-	
-	private void render(GLAutoDrawable drawable) {
-		LOGGER.info("Rendering...");
-		
-		for (Line line : lines) {
-			Point3 p1 = line.getP1();
-			Point3 p2 = line.getP2();
-			gl.glPushMatrix();
-			gl.glColor3i(0, 255, 0);
-			gl.glBegin(GL2.GL_LINES);
-			gl.glVertex3d(p1.getX(), p1.getY(), p1.getZ());
-			gl.glVertex3d(p2.getX(), p2.getY(), p2.getZ());
-			gl.glEnd();
-			gl.glPopMatrix();
-		}
-		
-		Point3 p1 = lines.get(pos).getP1();
-		Point3 p2 = lines.get(pos).getP2();
-		
-		gl.glColor3i(0, 0, 255);
-		gl.glBegin(GL2.GL_LINES);
-		gl.glVertex3d(p1.getX(), p1.getY(), p1.getZ());
-		gl.glVertex3d(p2.getX(), p2.getY(), p2.getZ());
-		gl.glEnd();
 	}
 	
 	public static void main(String[] args) {

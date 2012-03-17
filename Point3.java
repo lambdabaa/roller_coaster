@@ -31,4 +31,9 @@ public class Point3 {
 	public double getZ() {
 		return z;
 	}
+	
+	@Override
+	public String toString() {
+		return String.format("x = %f, y = %f, z = %f", x, y, z);
+	}
 }
