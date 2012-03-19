@@ -5,6 +5,12 @@ public class Point3 {
 	private double y;
 	private double z;
 	
+	public Point3(double _x, double _y, double _z) {
+		x = _x;
+		y = _y;
+		z = _z;
+	}
+	
 	public Point3 setX(double x) {
 		this.x = x;
 		return this;

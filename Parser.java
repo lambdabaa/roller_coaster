@@ -34,8 +34,8 @@ public class Parser {
   }
   
   public Parser() throws FileNotFoundException {
-	 new Parser("C:\\Users\\Daisy\\Documents\\Middlebury\\CSCI461\\untitled.obj");
-	 fFile = new File("C:\\Users\\Daisy\\Documents\\Middlebury\\CSCI461\\untitled.obj");
+	 new Parser("./roller_coaster/untitled.obj");
+	 fFile = new File("./roller_coaster/untitled.obj");
   }
   
   public final void processLineByLine() throws FileNotFoundException {

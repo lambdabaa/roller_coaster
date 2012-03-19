@@ -27,20 +27,22 @@ public class RollerCoaster implements GLEventListener {
 	private static final int HEIGHT = 400;
 	private static final int X0 = 100;
 	private static final int Y0 = 50;
-	private static final int REFRESH_RATE = 5;
+	private static final int REFRESH_RATE = 25;
 	private static final int NEAR = 1;
 	private static final int FAR = 10;
 	private static int lightMode = 3;
 	
+	
 	private FPSAnimator animator;
 	private GLWindow window;
-	//private GL2 gl;
 	private GLU glu;
 	private GLUT glut;
 	private SpeedProvider speedProvider;
 	
 	private int pos = 0;
-	private List<Line> lines = new LinkedList<Line>();
+	private int num_rails = 100;
+	//private List<Line> lines = new LinkedList<Line>();
+	private Point3[] centerPos = new Point3[num_rails];
 	
 	private float aspect = 1;
 	
@@ -49,16 +51,21 @@ public class RollerCoaster implements GLEventListener {
         glut = new GLUT();
         speedProvider = new ConstantSpeedProvider().setSpeed(1);
 
-        for (int i = 0; i < 50; i++) {
-        	lines.add(new Line()
-        		.setP1(new Point3()
-        			.setX(i / (double) 10)
-        			.setY(i / (double) 10)
-        			.setZ(i / (double) 10))
-        		.setP2(new Point3()
-        			.setX((i + 1) / (double) 10)
-        			.setY((i + 1) / (double) 10)
-        			.setZ((i + 1) / (double) 10)));
+        for (int i = 0; i < num_rails; i++) {
+//        	lines.add(new Line()
+//        		.setP1(new Point3()
+//        			.setX(i / (double) 10)
+//        			.setY(i / (double) 10)
+//        			.setZ(i / (double) 10))
+//        		.setP2(new Point3()
+//        			.setX((i + 1) / (double) 10)
+//        			.setY((i + 1) / (double) 10)
+//        			.setZ((i + 1) / (double) 10)));
+//        	centerPos.add(new Point3()
+//				.setX(i / (double) 10)
+//				.setY(i / (double) 10)
+//				.setZ(i / (double) 10));
+        	centerPos[i] = new Point3(i/2.0, 0, 0);
         }
         
 		window = GLWindow.create(new GLCapabilities(GLProfile.getDefault()));
@@ -113,14 +120,21 @@ public class RollerCoaster implements GLEventListener {
         setLights(gl); // positions lights
         setCam(gl);  // position camera
         
-		for (Line line : lines) {
-			drawRails(gl);
-			gl.glTranslatef(0.6f, 0.0f, 0.0f);
+		for (int i = 1; i < num_rails; i++) {
+			//gl.glPushMatrix();
+
+			drawRail(gl);
+			//LOGGER.info(Double.toString(center.getX()));
+			gl.glTranslated(centerPos[i].getX() - centerPos[i-1].getX(), 
+					centerPos[i].getY() - centerPos[i-1].getY(), 
+					centerPos[i].getZ() - centerPos[i-1].getZ());
+			//gl.glTranslated(0.5d, 0.0d, 0.0d);
+			//gl.glPopMatrix();
 		}
 
 	}
 	
-    public void drawRails(GL2 gl) {
+    public void drawRail(GL2 gl) {
        // gl.glRotated(zAngle, 0, 0, 1);
         
         for (int i = 1; i < Parser.faces.length; i++){
@@ -162,7 +176,7 @@ public class RollerCoaster implements GLEventListener {
         
         // set camera location and angle
         gl.glMatrixMode(GL2.GL_MODELVIEW);
-        glu.gluLookAt(2, 2, -pos/10.0, 0, 0, 0, 0, 1, 0);
+        glu.gluLookAt(centerPos[pos].getX()*2, 2, -1.0, centerPos[pos].getX(), centerPos[pos].getY(), centerPos[pos].getZ(), 0, 1, 0);
     }
 	
     public void setLights(GL2 gl) {
@@ -190,7 +204,8 @@ public class RollerCoaster implements GLEventListener {
             gl.glEnable(GL2.GL_LIGHT1);
         }
     }
-	private void update() {
+	
+    private void update() {
 		pos += speedProvider.getSpeed(this);
 		pos %= 50;
 		
@@ -199,7 +214,7 @@ public class RollerCoaster implements GLEventListener {
 	public static void main(String[] args) throws FileNotFoundException {
         new Parser();
 		LOGGER.info("Starting scene rendering...");
-		RollerCoaster rollerCoaster = new RollerCoaster();
+		new RollerCoaster();
 	}
 
 }
