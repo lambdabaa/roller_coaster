@@ -4,7 +4,7 @@ import java.util.Scanner;
 
 public class Parser {
   public static Vertex3[] vertices;
-  public static Face6[] faces;
+  public static Face8[] faces;
   public static Normal3[] normals;
   private Mode mode;
   private enum Mode {
@@ -26,7 +26,7 @@ public class Parser {
   public Parser(String string) throws FileNotFoundException{
 	fFile = new File(string);  
     vertices = new Vertex3[MAX_V];
-    faces = new Face6[MAX_F];
+    faces = new Face8[MAX_F];
     normals = new Normal3[MAX_N];
 	processLineByLine();
 	log("Done.");
@@ -34,8 +34,8 @@ public class Parser {
   }
   
   public Parser() throws FileNotFoundException {
-	 new Parser("./roller_coaster/untitled.obj");
-	 fFile = new File("./roller_coaster/untitled.obj");
+	 new Parser("./roller_coaster/untitled2.obj");
+	 fFile = new File("./roller_coaster/untitled2.obj");
   }
   
   public final void processLineByLine() throws FileNotFoundException {
@@ -76,7 +76,9 @@ public class Parser {
     	  int b_n = Integer.parseInt(scanner.next());
     	  int c = Integer.parseInt(scanner.next());
     	  int c_n = Integer.parseInt(scanner.next());
-    	  faces[num_f] = new Face6(a, b, c, a_n, b_n, c_n);
+    	  int d = Integer.parseInt(scanner.next());
+    	  int d_n = Integer.parseInt(scanner.next());
+    	  faces[num_f] = new Face8(a, b, c, d, a_n, b_n, c_n, d_n);
     	  //log("For the "+ num_f+"th face, "+faces[num_f].a+" "+faces[num_f].b+" "+faces[num_f].c);
      	  num_f++;
       } else if (mode == Mode.NORMALS){

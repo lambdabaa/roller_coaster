@@ -24,6 +24,10 @@ import roller_coaster.Parser;
 import com.jogamp.opengl.util.gl2.GLUT;
 import com.jogamp.opengl.util.texture.Texture;
 import com.jogamp.opengl.util.texture.TextureIO;
+import com.jogamp.newt.event.KeyAdapter;
+import com.jogamp.newt.event.KeyEvent;
+import com.jogamp.newt.event.MouseEvent;
+import com.jogamp.newt.event.MouseListener;
 import com.jogamp.newt.event.WindowAdapter;
 import com.jogamp.newt.event.WindowEvent;
 import com.jogamp.newt.opengl.GLWindow;
@@ -38,10 +42,17 @@ public class RollerCoaster implements GLEventListener {
 	private static final int Y0 = 50;
 	private static final int REFRESH_RATE = 5;
 	private static final int NEAR = 1;
-	private static final int FAR = 10;
+	private static final int FAR = 20;
 	private static int lightMode = 3;
 	
-	
+	private double dtheta = 0.5;
+	private double camDist = -3;
+    private double camPhi = 0;    // horizontal (azimuth) angle
+    private double camTheta = 0;  // vertical (elevation) angle
+    private boolean shiftKeyDown = false;
+    private int mouseDownx, mouseDowny;
+    private double mouseDownDist, mouseDownPhi, mouseDownTheta;
+    
 	private FPSAnimator animator;
 	private GLWindow window;
 	private GLU glu;
@@ -49,6 +60,7 @@ public class RollerCoaster implements GLEventListener {
 	private SpeedProvider speedProvider;
 	
 	private Texture groundTexture;
+	private Texture[] skyTexture = new Texture[5];
 	
 	private int pos = 0;
 	private int num_rails = 100;
@@ -62,15 +74,7 @@ public class RollerCoaster implements GLEventListener {
         speedProvider = new ConstantSpeedProvider().setSpeed(1);
 
         for (int i = 0; i < num_rails; i++) {
-        	if (i < 20){
-        		centerPos[i] = new Point3(0, i/2.0, -i/2.0);
-        	} else  {
-        		centerPos[i] = new Point3(0, (i-39)/2.0, -i/2.0);}
-//        	} else if (i < 60) {
-//        		centerPos[i] = new Point3(20.0-i/2.0, i/2.0, 0);
-//        	} else {
-//        		centerPos[i] = new Point3(30.0-i/2.0, i/2.0, 0);
-//        	}
+        	centerPos[i] = new Point3(0, Math.sin(i/10.0)+1, -i/10.0);
         }
         
 		window = GLWindow.create(new GLCapabilities(GLProfile.getDefault()));
@@ -86,6 +90,70 @@ public class RollerCoaster implements GLEventListener {
             }
         });
         
+        window.addKeyListener(new KeyAdapter() {
+            public void keyPressed(KeyEvent ke){
+                switch(ke.getKeyCode()) {
+                case KeyEvent.VK_ESCAPE:
+                case KeyEvent.VK_Q:
+                    System.exit(0);
+                case KeyEvent.VK_SHIFT:
+                    shiftKeyDown = true; break;
+                case KeyEvent.VK_A:
+                    dtheta += 0.01; break;
+                case KeyEvent.VK_UP:
+                    camDist += shiftKeyDown ? 1 : .2; break;
+                case KeyEvent.VK_DOWN:
+                    camDist -= shiftKeyDown ? 1 : .2; break;
+                case KeyEvent.VK_LEFT:
+                    camPhi -= 5; break;
+                case KeyEvent.VK_RIGHT:
+                    camPhi += 5; break;
+                case KeyEvent.VK_SPACE:
+                    camDist = -3; camPhi = 0; camTheta = 0; break;
+                case KeyEvent.VK_1:
+                    lightMode = 1; break;
+                case KeyEvent.VK_2:
+                    lightMode = 2; break;
+                case KeyEvent.VK_3:
+                    lightMode = 3; break;
+                }
+                //System.out.printf("camDist=%.2g  camTheta=%d ortho=%s\n", camDist, camTheta, useOrtho);
+            }
+            public void keyReleased(KeyEvent ke){
+                switch(ke.getKeyCode()) {
+                case KeyEvent.VK_SHIFT:
+                    shiftKeyDown = false; break;
+                }
+            }
+        });
+        window.addMouseListener(new MouseListener() {
+            public void mousePressed(MouseEvent e) {
+                mouseDownx = e.getX();
+                mouseDowny = e.getY();      
+                mouseDownDist = camDist;
+                mouseDownPhi = camPhi;
+                mouseDownTheta = camTheta;
+            }
+            public void mouseDragged(MouseEvent e) {
+                int dx =   e.getX() - mouseDownx;
+                int dy = -(e.getY() - mouseDowny);  // screen coords are upside down
+                //System.out.printf("moved mouse by %d, %d\n", dx, dy);
+                if (shiftKeyDown) { // mouse controls zoom
+                    double zoomFactor = 0.05;
+                    camDist = mouseDownDist + zoomFactor * dy;
+                } else { // mouse controls azimuth / elevation
+                    double panFactor = 0.5;
+                    camPhi = mouseDownPhi + panFactor * dx;
+                    camTheta = Math.min(89, Math.max(-89, mouseDownTheta + panFactor * dy));
+                }
+            }
+            public void mouseClicked(MouseEvent e) {}
+            public void mouseEntered(MouseEvent e) {}
+            public void mouseExited(MouseEvent e) {}
+            public void mouseReleased(MouseEvent e) {}
+            public void mouseMoved(MouseEvent e) {}
+            public void mouseWheelMoved(MouseEvent e) {}
+        });
         animator = new FPSAnimator(window, REFRESH_RATE);
         animator.add(window);
         animator.start();
@@ -97,11 +165,19 @@ public class RollerCoaster implements GLEventListener {
         gl = drawable.getGL().getGL2();
         gl.glEnable(GL2.GL_DEPTH_TEST);     // Enables Depth Testing
         gl.glPolygonMode(GL2.GL_FRONT, GL2.GL_FILL);    // draw front faces filled
-        gl.glPolygonMode(GL2.GL_BACK, GL2.GL_LINE);    // draw back faces with lines
-        groundTexture = loadTexture();
+        gl.glPolygonMode(GL2.GL_BACK, GL2.GL_LINES);    // draw back faces with lines
+        groundTexture = loadTexture("./roller_coaster/data/ground.jpg");
+        skyTexture[0] = loadTexture("./roller_coaster/data/otop7.jpg");
+        skyTexture[1] = loadTexture("./roller_coaster/data/oleft7.jpg");
+        skyTexture[2] = loadTexture("./roller_coaster/data/oback7.jpg");
+        skyTexture[3] = loadTexture("./roller_coaster/data/oright7.jpg");
+        skyTexture[4] = loadTexture("./roller_coaster/data/ofront7.jpg");
         if(groundTexture == null)
         	System.exit(0);
         groundTexture.enable(gl);
+        for (int i = 0; i < 5; i++){
+        	skyTexture[i].enable(gl);
+        }
 	}
 
 	@Override
@@ -124,35 +200,45 @@ public class RollerCoaster implements GLEventListener {
         gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         gl.glMatrixMode(GL2.GL_MODELVIEW);
         gl.glLoadIdentity();
-        
 
         setLights(gl); // positions lights
         setCam(gl);  // position camera
-        drawGround(gl);
+
+    	gl.glDisable(GL2.GL_DEPTH_TEST);
+        drawSkybox(gl);
+    	gl.glEnable(GL2.GL_DEPTH_TEST);
+        
+    	drawGround(gl);
+        
 		for (int i = 1; i < num_rails; i++) {
-			//drawRail(gl);
+			drawRail(gl);
+
 			gl.glTranslated(centerPos[i].getX() - centerPos[i-1].getX(), 
-					centerPos[i].getY() - centerPos[i-1].getY(), 
+					centerPos[i].getY() - centerPos[i-1].getY() + 0.05, 
 					centerPos[i].getZ() - centerPos[i-1].getZ());
 		}
 
 	}
 	
     public void drawRail(GL2 gl) {
-       // gl.glRotated(zAngle, 0, 0, 1);
         
         for (int i = 1; i < Parser.faces.length; i++){
         	gl.glPushMatrix();
-        	gl.glBegin(GL.GL_TRIANGLES);
+        	gl.glBegin(GL2.GL_QUADS);
         	gl.glColor3i(255, 166, 30);
         	gl.glNormal3f(Parser.normals[Parser.faces[i].a_n].nx, Parser.normals[Parser.faces[i].a_n].ny, Parser.normals[Parser.faces[i].a_n].nz);
         	gl.glVertex3f(Parser.vertices[Parser.faces[i].a].x,Parser.vertices[Parser.faces[i].a].y, Parser.vertices[Parser.faces[i].a].z ); 
         	gl.glVertex3f(Parser.vertices[Parser.faces[i].b].x,Parser.vertices[Parser.faces[i].b].y, Parser.vertices[Parser.faces[i].b].z ); 
         	gl.glVertex3f(Parser.vertices[Parser.faces[i].c].x,Parser.vertices[Parser.faces[i].c].y, Parser.vertices[Parser.faces[i].c].z ); 
+        	gl.glVertex3f(Parser.vertices[Parser.faces[i].d].x,Parser.vertices[Parser.faces[i].d].y, Parser.vertices[Parser.faces[i].d].z ); 
+
+        	gl.glRotated(90, 0, 0, 0);
+            //gl.glScaled(0.5d, 0.5d, 0.5d);
         	gl.glEnd();
         	gl.glPopMatrix();
         	if (Parser.faces[i+1] == null) break;
         }
+
     }
 	
     private void drawGround(GL2 gl) { 
@@ -160,25 +246,73 @@ public class RollerCoaster implements GLEventListener {
         gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, GL.GL_REPEAT); 
         gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, GL.GL_REPEAT);
         gl.glBegin(GL2.GL_QUADS);
-            gl.glTexCoord2f(0.0f, 0.0f); gl.glVertex3f(-50.0f, 0.0f,  0.0f);  // Bottom Left Of The Texture and Quad
-            gl.glTexCoord2f(20.0f, 0.0f); gl.glVertex3f(50.0f, 0.0f,  0.0f);  // Bottom Right Of The Texture and Quad
-            gl.glTexCoord2f(20.0f, 20.0f); gl.glVertex3f(50.0f,  0.0f,  -50.0f);  // Top Right Of The Texture and Quad
-            gl.glTexCoord2f(0.0f, 20.0f); gl.glVertex3f(-50.0f,  0.0f,  -50.0f);  // Top Left Of The Texture and Quad
+            gl.glTexCoord2f(0.0f, 0.0f); gl.glVertex3f(10.0f, 0.0f,  -10.0f);  // Bottom Left Of The Texture and Quad
+            gl.glTexCoord2f(10.0f, 0.0f); gl.glVertex3f(-10.0f, 0.0f,  -10.0f);  // Bottom Right Of The Texture and Quad
+            gl.glTexCoord2f(10.0f, 10.0f); gl.glVertex3f(-10.0f,  0.0f,  10.0f);  // Top Right Of The Texture and Quad
+            gl.glTexCoord2f(0.0f, 10.0f); gl.glVertex3f(10.0f,  0.0f,  10.0f);  // Top Left Of The Texture and Quad
         gl.glEnd();
     }
     
-    /**
-     * Loads the texture for the ground
-     * @return The texture
-     */
-    private Texture loadTexture() {
+    private void drawSkybox(GL2 gl) {
+    	gl.glPushMatrix();
+    	gl.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+    	//draw top
+    	skyTexture[0].bind(gl);
+        gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, GL.GL_CLAMP_TO_EDGE); 
+        gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, GL.GL_CLAMP_TO_EDGE);
+        gl.glBegin(GL2.GL_QUADS);
+        gl.glTexCoord2f(0.0f, 0.0f); gl.glVertex3f(-10f, 10f,  -10f);  // Bottom Left Of The Texture and Quad
+        gl.glTexCoord2f(1.0f, 0.0f); gl.glVertex3f(10f, 10f,  -10f);  // Bottom Right Of The Texture and Quad
+        gl.glTexCoord2f(1.0f, 1.0f); gl.glVertex3f(10f, 10f,  10f);  // Top Right Of The Texture and Quad
+        gl.glTexCoord2f(0.0f, 1.0f); gl.glVertex3f(-10f, 10f, 10f);  // Top Left Of The Texture and Quad
+	    gl.glEnd();
+		
+		//draw right
+		skyTexture[3].bind(gl);
+	    gl.glBegin(GL2.GL_QUADS);
+	        gl.glTexCoord2f(0.0f, 0.0f); gl.glVertex3f(-10f, 0f,  10f);  // Bottom Left Of The Texture and Quad
+	        gl.glTexCoord2f(1.0f, 0.0f); gl.glVertex3f(-10f, 0f,  -10f);  // Bottom Right Of The Texture and Quad
+	        gl.glTexCoord2f(1.0f, 1.0f); gl.glVertex3f(-10f, 10f,  -10f);  // Top Right Of The Texture and Quad
+	        gl.glTexCoord2f(0.0f, 1.0f); gl.glVertex3f(-10f, 10f,  10f);  // Top Left Of The Texture and Quad
+	    gl.glEnd();
+		
+		//draw back
+		skyTexture[2].bind(gl);
+	    gl.glBegin(GL2.GL_QUADS);
+	        gl.glTexCoord2f(0.0f, 0.0f); gl.glVertex3f(10f, 0f,  10f);  // Bottom Left Of The Texture and Quad
+	        gl.glTexCoord2f(1.0f, 0.0f); gl.glVertex3f(-10f, 0f,  10f);  // Bottom Right Of The Texture and Quad
+	        gl.glTexCoord2f(1.0f, 1.0f); gl.glVertex3f(-10f, 10f,  10f);  // Top Right Of The Texture and Quad
+	        gl.glTexCoord2f(0.0f, 1.0f); gl.glVertex3f(10f, 10f,  10f);  // Top Left Of The Texture and Quad
+	    gl.glEnd();
+	    
+		//draw left
+	    skyTexture[1].bind(gl);
+	    gl.glBegin(GL2.GL_QUADS);
+	        gl.glTexCoord2f(0.0f, 0.0f); gl.glVertex3f(10f, 0f,  -10f);  // Bottom Left Of The Texture and Quad
+	        gl.glTexCoord2f(1.0f, 0.0f); gl.glVertex3f(10f, 0f,  10f);  // Bottom Right Of The Texture and Quad
+	        gl.glTexCoord2f(1.0f, 1.0f); gl.glVertex3f(10f, 10f,  10f);  // Top Right Of The Texture and Quad
+	        gl.glTexCoord2f(0.0f, 1.0f); gl.glVertex3f(10f, 10f,  -10f);  // Top Left Of The Texture and Quad
+	    gl.glEnd();
+	    
+		//draw front quad
+	    skyTexture[4].bind(gl);
+	    gl.glBegin(GL2.GL_QUADS);
+	        gl.glTexCoord2f(0.0f, 0.0f); gl.glVertex3f(-10f, 0f,  -10f);  // Bottom Left Of The Texture and Quad
+	        gl.glTexCoord2f(1.0f, 0.0f); gl.glVertex3f(10f, 0f,  -10f);  // Bottom Right Of The Texture and Quad
+	        gl.glTexCoord2f(1.0f, 1.0f); gl.glVertex3f(10f, 10f,  -10f);  // Top Right Of The Texture and Quad
+	        gl.glTexCoord2f(0.0f, 1.0f); gl.glVertex3f(-10f, 10f,  -10f);  // Top Left Of The Texture and Quad
+	    gl.glEnd();
+		gl.glPopMatrix();
+    }
+    
+    private Texture loadTexture(String string) {
         Texture texture = null;
         File imgFile = null;
         
         try {
-            URL url = this.getClass().getClassLoader().getResource("./roller_coaster/data/ground.jpg"); 
+            URL url = this.getClass().getClassLoader().getResource(string); 
             imgFile = new File(url.getFile());
-            texture = TextureIO.newTexture(imgFile, true);// bool - mipmap.
+            texture = TextureIO.newTexture(imgFile, true);
         } 
         catch (IOException e) {
             System.out.println("fail openning file... " + imgFile.getName());
@@ -187,6 +321,7 @@ public class RollerCoaster implements GLEventListener {
         
         return texture;
     }    
+    
     
 	@Override
 	public void reshape(GLAutoDrawable drawable, int x, int y, int width,
@@ -213,13 +348,19 @@ public class RollerCoaster implements GLEventListener {
         // set camera location and angle
         gl.glMatrixMode(GL2.GL_MODELVIEW);
         //glu.gluLookAt(centerPos[pos].getX(), centerPos[pos].getY()+2, centerPos[pos].getZ(), 0, 0, 0, 0, 1, 0);
-        glu.gluLookAt(0, 6, -pos/10.0, 0, -1, -20, 0, 1, 0);
+        double phi = camPhi / 180.0 * Math.PI;
+        double thet = camTheta / 180.0 * Math.PI;
+        double cx =  camDist * Math.sin(phi) * Math.cos(thet);
+        double cz = -camDist * Math.cos(phi) * Math.cos(thet);
+        double cy =  camDist * Math.sin(thet);
+
+        glu.gluLookAt(cx, cy, cz, 0, 0, 0, 0, 1, 0);
     }
 	
     public void setLights(GL2 gl) {
-        float[] lightPos = {20, 10, 10, 1};
+        float[] lightPos = {0, 3, 0, 1};
         float[] lightAmbient = {0.2f, 0.2f, 0.2f, 1};
-        float[] lightDiffuse = {0.8f, 0.8f, 0.8f, 1};
+        float[] lightDiffuse = {0.9f, 0.9f, 0.9f, 1};
         float[] lightSpecular = {0.8f, 0.8f, 0.8f, 1};
 
         gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_POSITION, lightPos, 0);
