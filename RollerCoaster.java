@@ -64,7 +64,7 @@ public class RollerCoaster implements GLEventListener {
 	private Texture[] skyTexture = new Texture[5];
 	
 	private int pos = 0;
-	private int num_rails = 200;
+	private int num_rails = 400;
 	private Point3[] centerPos = new Point3[num_rails];
 	
 	private float aspect = 1;
@@ -74,8 +74,12 @@ public class RollerCoaster implements GLEventListener {
         glut = new GLUT();
         speedProvider = new ConstantSpeedProvider().setSpeed(1);
 
-        for (int i = 0; i < num_rails; i++) {
-        	centerPos[i] = new Point3(0, Math.sin(i/10.0)+1, -i/10.0);
+        for (int i = 0; i < num_rails/2; i++) {
+        	centerPos[i] = new Point3(0, Math.sin(i/10.0)+1, 10-i/10.0);
+        }
+        for (int i = num_rails/4; i < num_rails; i++) {
+        	centerPos[i] = new Point3(Math.atan(-10+i/10.0)*2, Math.sin(i/10.0)+1, 10-i/10.0);
+        	//centerPos[i] = new Point3(10-i/10.0, Math.sin((-i/10.0)*(-i/10.0)-100)+1, (-i/10.0)*(-i/10.0)-100);
         }
         
 		window = GLWindow.create(new GLCapabilities(GLProfile.getDefault()));
@@ -214,7 +218,7 @@ public class RollerCoaster implements GLEventListener {
         
 		for (int i = 1; i < num_rails; i++) {
 			gl.glPushMatrix();
-			gl.glTranslated(centerPos[i].getX(), centerPos[i].getY()+0.01, centerPos[i].getZ());
+			gl.glTranslated(centerPos[i].getX(), centerPos[i].getY(), centerPos[i].getZ());
 			drawRail(gl);
 			gl.glPopMatrix();
 		}
@@ -363,14 +367,7 @@ public class RollerCoaster implements GLEventListener {
         
         // set camera location and angle
         gl.glMatrixMode(GL2.GL_MODELVIEW);
-        //glu.gluLookAt(centerPos[pos].getX(), centerPos[pos].getY()+2, centerPos[pos].getZ(), 0, 0, 0, 0, 1, 0);
-        double phi = camPhi / 180.0 * Math.PI;
-        double thet = camTheta / 180.0 * Math.PI;
-        double cx =  camDist * Math.sin(phi) * Math.cos(thet);
-        double cz = -camDist * Math.cos(phi) * Math.cos(thet);
-        double cy =  camDist * Math.sin(thet);
-
-        glu.gluLookAt(centerPos[pos].getX(), centerPos[pos].getY()+2, centerPos[pos].getZ(), 0, centerPos[pos].getY(), -20, 0, 1, 0);
+        glu.gluLookAt(centerPos[pos].getX(), centerPos[pos].getY()+1, centerPos[pos].getZ(), centerPos[pos].getX(), centerPos[pos].getY()-3, -40, 0, 1, 0);
     }
 	
     public void setLights(GL2 gl) {
