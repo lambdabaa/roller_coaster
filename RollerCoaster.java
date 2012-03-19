@@ -1,9 +1,11 @@
 package roller_coaster;
 
+import java.io.FileNotFoundException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
 
+import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLCapabilities;
@@ -11,6 +13,9 @@ import javax.media.opengl.GLEventListener;
 import javax.media.opengl.GLProfile;
 import javax.media.opengl.glu.GLU;
 
+import roller_coaster.Parser;
+
+import com.jogamp.opengl.util.gl2.GLUT;
 import com.jogamp.newt.event.WindowAdapter;
 import com.jogamp.newt.event.WindowEvent;
 import com.jogamp.newt.opengl.GLWindow;
@@ -22,14 +27,16 @@ public class RollerCoaster implements GLEventListener {
 	private static final int HEIGHT = 400;
 	private static final int X0 = 100;
 	private static final int Y0 = 50;
-	private static final int REFRESH_RATE = 60;
+	private static final int REFRESH_RATE = 30;
 	private static final int NEAR = 1;
 	private static final int FAR = 10;
+	private static int lightMode = 3;
 	
 	private FPSAnimator animator;
 	private GLWindow window;
 	private GL2 gl;
 	private GLU glu;
+	private GLUT glut;
 	private SpeedProvider speedProvider;
 	
 	private int pos = 0;
@@ -39,18 +46,19 @@ public class RollerCoaster implements GLEventListener {
 	
 	public RollerCoaster() {
         glu = new GLU();
+        glut = new GLUT();
         speedProvider = new ConstantSpeedProvider().setSpeed(1);
-        
+
         for (int i = 0; i < 50; i++) {
         	lines.add(new Line()
         		.setP1(new Point3()
-        			.setX(i / (double) 100)
-        			.setY(i / (double) 100)
-        			.setZ(i / (double) 100))
+        			.setX(i / (double) 10)
+        			.setY(i / (double) 10)
+        			.setZ(i / (double) 10))
         		.setP2(new Point3()
-        			.setX((i + 1) / (double) 100)
-        			.setY((i + 1) / (double) 100)
-        			.setZ((i + 1) / (double) 100)));
+        			.setX((i + 1) / (double) 10)
+        			.setY((i + 1) / (double) 10)
+        			.setZ((i + 1) / (double) 10)));
         }
         
 		window = GLWindow.create(new GLCapabilities(GLProfile.getDefault()));
@@ -90,33 +98,78 @@ public class RollerCoaster implements GLEventListener {
 	@Override
 	public void display(GLAutoDrawable drawable) {
 		update();
-		
+		render(drawable);
+	}
+	
+	public void render(GLAutoDrawable drawable) {
+        GL2 gl = drawable.getGL().getGL2();
+        gl.glMatrixMode(GL2.GL_MODELVIEW);
+        gl.glLoadIdentity();
+        
+
+        gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);   
+
+        gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        setLights(gl); // positions lights
+        setCam(gl);  // position camera
+        
 		for (Line line : lines) {
-			Point3 p1 = line.getP1();
-			Point3 p2 = line.getP2();
-			LOGGER.info(p1.toString());
-			LOGGER.info(p2.toString());
-			
-			gl.glPushMatrix();
-			gl.glColor3i(0, 255, 0);
-			gl.glBegin(GL2.GL_LINES);
-			gl.glVertex3d(p1.getX(), p1.getY(), p1.getZ());
-			gl.glVertex3d(p2.getX(), p2.getY(), p2.getZ());
-			gl.glEnd();
-			gl.glPopMatrix();
+//			Point3 p1 = line.getP1();
+//			Point3 p2 = line.getP2();
+//			
+//			
+//			gl.glColor3i(160, 30, 200);
+//			gl.glBegin(GL2.GL_LINES);
+//			gl.glVertex3d(p1.getX(), p1.getY(), p1.getZ());
+//			gl.glVertex3d(p2.getX(), p2.getY(), p2.getZ());
+//			gl.glEnd();
+//			
+			//gl.glPushMatrix();
+			//TODO: fix
+			//loop for 10 times to draw the rails
+//			for (int i=0; i < 8; i++){
+//				gl.glColor3i(160, 30, 200);
+//				glut.glutSolidCube(0.1f);
+//				gl.glTranslatef(0.1f, 0.0f, 0.0f);
+//			}
+//			gl.glPopMatrix();
+//
+//			gl.glTranslatef(0.0f, 0.0f, 0.0f);
 		}
 		
-		Point3 p1 = lines.get(pos).getP1();
-		Point3 p2 = lines.get(pos).getP2();
+		drawRails(gl);
 		
-		gl.glPushMatrix();
-		gl.glColor3i(0, 0, 255);
+		Point3 p1 = lines.get((pos+55)%50).getP1();
+		Point3 p2 = lines.get((pos+5)%50).getP2();
+		
+		//gl.glPushMatrix();
+		gl.glColor3i(0, 0, 0);
 		gl.glBegin(GL2.GL_LINES);
 		gl.glVertex3d(p1.getX(), p1.getY(), p1.getZ());
 		gl.glVertex3d(p2.getX(), p2.getY(), p2.getZ());
 		gl.glEnd();
-		gl.glPopMatrix();
+		gl.glTranslatef(0.1f, 0.1f, 0.1f);
+		glut.glutSolidCube(0.1f);
+		//gl.glPopMatrix();
 	}
+	
+    public void drawRails(GL2 gl) {
+       // gl.glRotated(zAngle, 0, 0, 1);
+        
+        for (int i = 1; i < Parser.faces.length; i++){
+        	gl.glPushMatrix();
+        	gl.glBegin(GL.GL_TRIANGLES);
+        	gl.glColor3i(255, 166, 30);
+        	gl.glNormal3f(Parser.normals[Parser.faces[i].a_n].nx, Parser.normals[Parser.faces[i].a_n].ny, Parser.normals[Parser.faces[i].a_n].nz);
+        	gl.glVertex3f(Parser.vertices[Parser.faces[i].a].x,Parser.vertices[Parser.faces[i].a].y, Parser.vertices[Parser.faces[i].a].z ); 
+        	gl.glVertex3f(Parser.vertices[Parser.faces[i].b].x,Parser.vertices[Parser.faces[i].b].y, Parser.vertices[Parser.faces[i].b].z ); 
+        	gl.glVertex3f(Parser.vertices[Parser.faces[i].c].x,Parser.vertices[Parser.faces[i].c].y, Parser.vertices[Parser.faces[i].c].z ); 
+        	gl.glEnd();
+        	gl.glPopMatrix();
+        	if (Parser.faces[i+1] == null) break;
+        }
+    }
+	
 
 	@Override
 	public void reshape(GLAutoDrawable drawable, int x, int y, int width,
@@ -142,15 +195,42 @@ public class RollerCoaster implements GLEventListener {
         
         // set camera location and angle
         gl.glMatrixMode(GL2.GL_MODELVIEW);
-        glu.gluLookAt(0, 0, -5, 0, 0, 0, 0, 1, 0);
+        glu.gluLookAt(2, 2, -pos/10.0, 0, 0, 0, 0, 1, 0);
     }
 	
+    public void setLights(GL2 gl) {
+        float[] lightPos = {20, 10, 10, 1};
+        float[] lightAmbient = {0.2f, 0.2f, 0.2f, 1};
+        float[] lightDiffuse = {0.8f, 0.8f, 0.8f, 1};
+        float[] lightSpecular = {0.8f, 0.8f, 0.8f, 1};
+
+        gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_POSITION, lightPos, 0);
+        gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_AMBIENT, lightAmbient, 0);
+        gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_DIFFUSE, lightDiffuse, 0);
+        gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_SPECULAR, lightSpecular, 0);
+
+        if (lightMode == 1) {
+            gl.glDisable(GL2.GL_LIGHTING);
+            gl.glDisable(GL2.GL_LIGHT0);
+            gl.glDisable(GL2.GL_LIGHT1);
+        } else if (lightMode == 2) {
+            gl.glEnable(GL2.GL_LIGHTING);
+            gl.glEnable(GL2.GL_LIGHT0);
+            gl.glDisable(GL2.GL_LIGHT1);
+        } else { // mode 3
+            gl.glEnable(GL2.GL_LIGHTING); 
+            gl.glDisable(GL2.GL_LIGHT0);
+            gl.glEnable(GL2.GL_LIGHT1);
+        }
+    }
 	private void update() {
 		pos += speedProvider.getSpeed(this);
 		pos %= 50;
+		
 	}
 	
-	public static void main(String[] args) {
+	public static void main(String[] args) throws FileNotFoundException {
+        new Parser();
 		LOGGER.info("Starting scene rendering...");
 		RollerCoaster rollerCoaster = new RollerCoaster();
 	}
