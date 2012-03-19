@@ -27,14 +27,14 @@ public class RollerCoaster implements GLEventListener {
 	private static final int HEIGHT = 400;
 	private static final int X0 = 100;
 	private static final int Y0 = 50;
-	private static final int REFRESH_RATE = 30;
+	private static final int REFRESH_RATE = 5;
 	private static final int NEAR = 1;
 	private static final int FAR = 10;
 	private static int lightMode = 3;
 	
 	private FPSAnimator animator;
 	private GLWindow window;
-	private GL2 gl;
+	//private GL2 gl;
 	private GLU glu;
 	private GLUT glut;
 	private SpeedProvider speedProvider;
@@ -81,6 +81,7 @@ public class RollerCoaster implements GLEventListener {
 
 	@Override
 	public void init(GLAutoDrawable drawable) {
+        GL2 gl = drawable.getGL().getGL2();
         gl = drawable.getGL().getGL2();
         gl.glEnable(GL2.GL_DEPTH_TEST);     // Enables Depth Testing
         gl.glPolygonMode(GL2.GL_FRONT, GL2.GL_FILL);    // draw front faces filled
@@ -103,54 +104,20 @@ public class RollerCoaster implements GLEventListener {
 	
 	public void render(GLAutoDrawable drawable) {
         GL2 gl = drawable.getGL().getGL2();
+        gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);   
+        gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         gl.glMatrixMode(GL2.GL_MODELVIEW);
         gl.glLoadIdentity();
         
 
-        gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);   
-
-        gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         setLights(gl); // positions lights
         setCam(gl);  // position camera
         
 		for (Line line : lines) {
-//			Point3 p1 = line.getP1();
-//			Point3 p2 = line.getP2();
-//			
-//			
-//			gl.glColor3i(160, 30, 200);
-//			gl.glBegin(GL2.GL_LINES);
-//			gl.glVertex3d(p1.getX(), p1.getY(), p1.getZ());
-//			gl.glVertex3d(p2.getX(), p2.getY(), p2.getZ());
-//			gl.glEnd();
-//			
-			//gl.glPushMatrix();
-			//TODO: fix
-			//loop for 10 times to draw the rails
-//			for (int i=0; i < 8; i++){
-//				gl.glColor3i(160, 30, 200);
-//				glut.glutSolidCube(0.1f);
-//				gl.glTranslatef(0.1f, 0.0f, 0.0f);
-//			}
-//			gl.glPopMatrix();
-//
-//			gl.glTranslatef(0.0f, 0.0f, 0.0f);
+			drawRails(gl);
+			gl.glTranslatef(0.6f, 0.0f, 0.0f);
 		}
-		
-		drawRails(gl);
-		
-		Point3 p1 = lines.get((pos+55)%50).getP1();
-		Point3 p2 = lines.get((pos+5)%50).getP2();
-		
-		//gl.glPushMatrix();
-		gl.glColor3i(0, 0, 0);
-		gl.glBegin(GL2.GL_LINES);
-		gl.glVertex3d(p1.getX(), p1.getY(), p1.getZ());
-		gl.glVertex3d(p2.getX(), p2.getY(), p2.getZ());
-		gl.glEnd();
-		gl.glTranslatef(0.1f, 0.1f, 0.1f);
-		glut.glutSolidCube(0.1f);
-		//gl.glPopMatrix();
+
 	}
 	
     public void drawRails(GL2 gl) {
