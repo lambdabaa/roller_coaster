@@ -40,7 +40,7 @@ public class RollerCoaster implements GLEventListener {
 	private static final int HEIGHT = 400;
 	private static final int X0 = 100;
 	private static final int Y0 = 50;
-	private static final int REFRESH_RATE = 5;
+	private static final int REFRESH_RATE = 15;
 	private static final int NEAR = 1;
 	private static final int FAR = 20;
 	private static int lightMode = 3;
@@ -64,7 +64,7 @@ public class RollerCoaster implements GLEventListener {
 	private Texture[] skyTexture = new Texture[5];
 	
 	private int pos = 0;
-	private int num_rails = 100;
+	private int num_rails = 200;
 	private Point3[] centerPos = new Point3[num_rails];
 	
 	private float aspect = 1;
@@ -214,13 +214,11 @@ public class RollerCoaster implements GLEventListener {
         
 		for (int i = 1; i < num_rails; i++) {
 			gl.glPushMatrix();
-			gl.glTranslated(centerPos[i].getX(), 
-					centerPos[i].getY()+0.01, 
-					centerPos[i].getZ());
+			gl.glTranslated(centerPos[i].getX(), centerPos[i].getY()+0.01, centerPos[i].getZ());
 			drawRail(gl);
 			gl.glPopMatrix();
 		}
-
+		drawBox(gl);
 	}
 	
     public void drawRail(GL2 gl) {
@@ -233,8 +231,7 @@ public class RollerCoaster implements GLEventListener {
         	gl.glBegin(GL2.GL_QUADS);
         	gl.glColor3i(255, 166, 30);
         	gl.glNormal3f(Parser.normals[Parser.faces[i].a_n].nx, Parser.normals[Parser.faces[i].a_n].ny, Parser.normals[Parser.faces[i].a_n].nz);
-        	
-        	
+       	
         	gl.glTexCoord2f(0.0f, 0.0f); 
         	gl.glVertex3f(Parser.vertices[Parser.faces[i].a].x,Parser.vertices[Parser.faces[i].a].y, Parser.vertices[Parser.faces[i].a].z ); 
             gl.glTexCoord2f(1.0f, 0.0f); 
@@ -251,6 +248,13 @@ public class RollerCoaster implements GLEventListener {
         	if (Parser.faces[i+1] == null) break;
         }
 
+    }
+    
+    private void drawBox(GL2 gl) {
+    	gl.glPushMatrix();
+		gl.glTranslated(centerPos[pos].getX(), centerPos[pos].getY()+0.05, centerPos[pos].getZ());
+    	glut.glutSolidSphere(0.2f, 1, 1);
+    	gl.glPopMatrix();
     }
 	
     private void drawGround(GL2 gl) { 
@@ -366,7 +370,7 @@ public class RollerCoaster implements GLEventListener {
         double cz = -camDist * Math.cos(phi) * Math.cos(thet);
         double cy =  camDist * Math.sin(thet);
 
-        glu.gluLookAt(cx, cy, cz, 0, 0, 0, 0, 1, 0);
+        glu.gluLookAt(centerPos[pos].getX(), centerPos[pos].getY()+2, centerPos[pos].getZ(), 0, centerPos[pos].getY(), -20, 0, 1, 0);
     }
 	
     public void setLights(GL2 gl) {
