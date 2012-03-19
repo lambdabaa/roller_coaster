@@ -60,6 +60,7 @@ public class RollerCoaster implements GLEventListener {
 	private SpeedProvider speedProvider;
 	
 	private Texture groundTexture;
+	private Texture railTexture;
 	private Texture[] skyTexture = new Texture[5];
 	
 	private int pos = 0;
@@ -172,6 +173,7 @@ public class RollerCoaster implements GLEventListener {
         skyTexture[2] = loadTexture("./roller_coaster/data/oback7.jpg");
         skyTexture[3] = loadTexture("./roller_coaster/data/oright7.jpg");
         skyTexture[4] = loadTexture("./roller_coaster/data/ofront7.jpg");
+        railTexture = loadTexture("./roller_coaster/data/wood3.jpg");
         if(groundTexture == null)
         	System.exit(0);
         groundTexture.enable(gl);
@@ -211,28 +213,38 @@ public class RollerCoaster implements GLEventListener {
     	drawGround(gl);
         
 		for (int i = 1; i < num_rails; i++) {
+			gl.glPushMatrix();
+			gl.glTranslated(centerPos[i].getX(), 
+					centerPos[i].getY()+0.01, 
+					centerPos[i].getZ());
 			drawRail(gl);
-
-			gl.glTranslated(centerPos[i].getX() - centerPos[i-1].getX(), 
-					centerPos[i].getY() - centerPos[i-1].getY() + 0.05, 
-					centerPos[i].getZ() - centerPos[i-1].getZ());
+			gl.glPopMatrix();
 		}
 
 	}
 	
     public void drawRail(GL2 gl) {
-        
+
+        railTexture.bind(gl);
+        gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, GL.GL_REPEAT); 
+        gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, GL.GL_REPEAT);
         for (int i = 1; i < Parser.faces.length; i++){
         	gl.glPushMatrix();
         	gl.glBegin(GL2.GL_QUADS);
         	gl.glColor3i(255, 166, 30);
         	gl.glNormal3f(Parser.normals[Parser.faces[i].a_n].nx, Parser.normals[Parser.faces[i].a_n].ny, Parser.normals[Parser.faces[i].a_n].nz);
+        	
+        	
+        	gl.glTexCoord2f(0.0f, 0.0f); 
         	gl.glVertex3f(Parser.vertices[Parser.faces[i].a].x,Parser.vertices[Parser.faces[i].a].y, Parser.vertices[Parser.faces[i].a].z ); 
-        	gl.glVertex3f(Parser.vertices[Parser.faces[i].b].x,Parser.vertices[Parser.faces[i].b].y, Parser.vertices[Parser.faces[i].b].z ); 
-        	gl.glVertex3f(Parser.vertices[Parser.faces[i].c].x,Parser.vertices[Parser.faces[i].c].y, Parser.vertices[Parser.faces[i].c].z ); 
-        	gl.glVertex3f(Parser.vertices[Parser.faces[i].d].x,Parser.vertices[Parser.faces[i].d].y, Parser.vertices[Parser.faces[i].d].z ); 
-
-        	gl.glRotated(90, 0, 0, 0);
+            gl.glTexCoord2f(1.0f, 0.0f); 
+            gl.glVertex3f(Parser.vertices[Parser.faces[i].b].x,Parser.vertices[Parser.faces[i].b].y, Parser.vertices[Parser.faces[i].b].z ); 
+            gl.glTexCoord2f(1.0f, 1.0f); 
+            gl.glVertex3f(Parser.vertices[Parser.faces[i].c].x,Parser.vertices[Parser.faces[i].c].y, Parser.vertices[Parser.faces[i].c].z ); 
+            gl.glTexCoord2f(0.0f, 1.0f); 
+            gl.glVertex3f(Parser.vertices[Parser.faces[i].d].x,Parser.vertices[Parser.faces[i].d].y, Parser.vertices[Parser.faces[i].d].z ); 
+            
+        	//gl.glRotated(90, 0, 0, 0);
             //gl.glScaled(0.5d, 0.5d, 0.5d);
         	gl.glEnd();
         	gl.glPopMatrix();
