@@ -1,8 +1,14 @@
+//A simulation of first person view on a roller coaster
+//Authors: Daisy Zhuo, Gareth Aye
+//Credit: Christopher Twigg (Carnegie Mellon University) project instruction on:
+//http://graphics.cs.cmu.edu/nsp/course/15-462/Fall07/462/assts/Assn2.html
+
 package roller_coaster;
 
+import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.LinkedList;
-import java.util.List;
+import java.io.IOException;
+import java.net.URL;
 import java.util.logging.Logger;
 
 import javax.media.opengl.GL;
@@ -16,10 +22,13 @@ import javax.media.opengl.glu.GLU;
 import roller_coaster.Parser;
 
 import com.jogamp.opengl.util.gl2.GLUT;
+import com.jogamp.opengl.util.texture.Texture;
+import com.jogamp.opengl.util.texture.TextureIO;
 import com.jogamp.newt.event.WindowAdapter;
 import com.jogamp.newt.event.WindowEvent;
 import com.jogamp.newt.opengl.GLWindow;
 import com.jogamp.opengl.util.FPSAnimator;
+
 
 public class RollerCoaster implements GLEventListener {
 	private static final Logger LOGGER = Logger.getLogger(RollerCoaster.class.getName());
@@ -27,7 +36,7 @@ public class RollerCoaster implements GLEventListener {
 	private static final int HEIGHT = 400;
 	private static final int X0 = 100;
 	private static final int Y0 = 50;
-	private static final int REFRESH_RATE = 25;
+	private static final int REFRESH_RATE = 5;
 	private static final int NEAR = 1;
 	private static final int FAR = 10;
 	private static int lightMode = 3;
@@ -39,9 +48,10 @@ public class RollerCoaster implements GLEventListener {
 	private GLUT glut;
 	private SpeedProvider speedProvider;
 	
+	private Texture groundTexture;
+	
 	private int pos = 0;
 	private int num_rails = 100;
-	//private List<Line> lines = new LinkedList<Line>();
 	private Point3[] centerPos = new Point3[num_rails];
 	
 	private float aspect = 1;
@@ -52,20 +62,15 @@ public class RollerCoaster implements GLEventListener {
         speedProvider = new ConstantSpeedProvider().setSpeed(1);
 
         for (int i = 0; i < num_rails; i++) {
-//        	lines.add(new Line()
-//        		.setP1(new Point3()
-//        			.setX(i / (double) 10)
-//        			.setY(i / (double) 10)
-//        			.setZ(i / (double) 10))
-//        		.setP2(new Point3()
-//        			.setX((i + 1) / (double) 10)
-//        			.setY((i + 1) / (double) 10)
-//        			.setZ((i + 1) / (double) 10)));
-//        	centerPos.add(new Point3()
-//				.setX(i / (double) 10)
-//				.setY(i / (double) 10)
-//				.setZ(i / (double) 10));
-        	centerPos[i] = new Point3(i/2.0, 0, 0);
+        	if (i < 20){
+        		centerPos[i] = new Point3(0, i/2.0, -i/2.0);
+        	} else  {
+        		centerPos[i] = new Point3(0, (i-39)/2.0, -i/2.0);}
+//        	} else if (i < 60) {
+//        		centerPos[i] = new Point3(20.0-i/2.0, i/2.0, 0);
+//        	} else {
+//        		centerPos[i] = new Point3(30.0-i/2.0, i/2.0, 0);
+//        	}
         }
         
 		window = GLWindow.create(new GLCapabilities(GLProfile.getDefault()));
@@ -93,6 +98,10 @@ public class RollerCoaster implements GLEventListener {
         gl.glEnable(GL2.GL_DEPTH_TEST);     // Enables Depth Testing
         gl.glPolygonMode(GL2.GL_FRONT, GL2.GL_FILL);    // draw front faces filled
         gl.glPolygonMode(GL2.GL_BACK, GL2.GL_LINE);    // draw back faces with lines
+        groundTexture = loadTexture();
+        if(groundTexture == null)
+        	System.exit(0);
+        groundTexture.enable(gl);
 	}
 
 	@Override
@@ -119,17 +128,12 @@ public class RollerCoaster implements GLEventListener {
 
         setLights(gl); // positions lights
         setCam(gl);  // position camera
-        
+        drawGround(gl);
 		for (int i = 1; i < num_rails; i++) {
-			//gl.glPushMatrix();
-
-			drawRail(gl);
-			//LOGGER.info(Double.toString(center.getX()));
+			//drawRail(gl);
 			gl.glTranslated(centerPos[i].getX() - centerPos[i-1].getX(), 
 					centerPos[i].getY() - centerPos[i-1].getY(), 
 					centerPos[i].getZ() - centerPos[i-1].getZ());
-			//gl.glTranslated(0.5d, 0.0d, 0.0d);
-			//gl.glPopMatrix();
 		}
 
 	}
@@ -151,7 +155,39 @@ public class RollerCoaster implements GLEventListener {
         }
     }
 	
-
+    private void drawGround(GL2 gl) { 
+        groundTexture.bind(gl);
+        gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, GL.GL_REPEAT); 
+        gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, GL.GL_REPEAT);
+        gl.glBegin(GL2.GL_QUADS);
+            gl.glTexCoord2f(0.0f, 0.0f); gl.glVertex3f(-50.0f, 0.0f,  0.0f);  // Bottom Left Of The Texture and Quad
+            gl.glTexCoord2f(20.0f, 0.0f); gl.glVertex3f(50.0f, 0.0f,  0.0f);  // Bottom Right Of The Texture and Quad
+            gl.glTexCoord2f(20.0f, 20.0f); gl.glVertex3f(50.0f,  0.0f,  -50.0f);  // Top Right Of The Texture and Quad
+            gl.glTexCoord2f(0.0f, 20.0f); gl.glVertex3f(-50.0f,  0.0f,  -50.0f);  // Top Left Of The Texture and Quad
+        gl.glEnd();
+    }
+    
+    /**
+     * Loads the texture for the ground
+     * @return The texture
+     */
+    private Texture loadTexture() {
+        Texture texture = null;
+        File imgFile = null;
+        
+        try {
+            URL url = this.getClass().getClassLoader().getResource("./roller_coaster/data/ground.jpg"); 
+            imgFile = new File(url.getFile());
+            texture = TextureIO.newTexture(imgFile, true);// bool - mipmap.
+        } 
+        catch (IOException e) {
+            System.out.println("fail openning file... " + imgFile.getName());
+            System.out.println(e);
+        }
+        
+        return texture;
+    }    
+    
 	@Override
 	public void reshape(GLAutoDrawable drawable, int x, int y, int width,
 			int height) {
@@ -176,7 +212,8 @@ public class RollerCoaster implements GLEventListener {
         
         // set camera location and angle
         gl.glMatrixMode(GL2.GL_MODELVIEW);
-        glu.gluLookAt(centerPos[pos].getX()*2, 2, -1.0, centerPos[pos].getX(), centerPos[pos].getY(), centerPos[pos].getZ(), 0, 1, 0);
+        //glu.gluLookAt(centerPos[pos].getX(), centerPos[pos].getY()+2, centerPos[pos].getZ(), 0, 0, 0, 0, 1, 0);
+        glu.gluLookAt(0, 6, -pos/10.0, 0, -1, -20, 0, 1, 0);
     }
 	
     public void setLights(GL2 gl) {
@@ -207,7 +244,7 @@ public class RollerCoaster implements GLEventListener {
 	
     private void update() {
 		pos += speedProvider.getSpeed(this);
-		pos %= 50;
+		pos %= num_rails;
 		
 	}
 	
