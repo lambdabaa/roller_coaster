@@ -36,16 +36,16 @@ import com.jogamp.opengl.util.FPSAnimator;
 
 public class RollerCoaster implements GLEventListener {
 	private static final Logger LOGGER = Logger.getLogger(RollerCoaster.class.getName());
-	private static final int WIDTH = 600;
-	private static final int HEIGHT = 400;
+	private static final int WIDTH = 800;
+	private static final int HEIGHT = 600;
 	private static final int X0 = 100;
 	private static final int Y0 = 50;
-	private static final int REFRESH_RATE = 20;
+	private static final int REFRESH_RATE = 30;
 	private static final int NEAR = 1;
 	private static final int FAR = 25;
 	private static int lightMode = 3;
 	
-	private double dtheta = 0.005;
+	private double dtheta = 0.008;
 	private double camDist = -3;
     private double camPhi = 0;    // horizontal (azimuth) angle
     private double camTheta = 0;  // vertical (elevation) angle
@@ -162,7 +162,7 @@ public class RollerCoaster implements GLEventListener {
 	public void init(GLAutoDrawable drawable) {
         GL2 gl = drawable.getGL().getGL2();
         gl = drawable.getGL().getGL2();
-        gl.glEnable(GL2.GL_DEPTH_TEST);     // Enables Depth Testing
+        //gl.glEnable(GL2.GL_DEPTH_TEST);     // Enables Depth Testing
         gl.glPolygonMode(GL2.GL_FRONT, GL2.GL_FILL);    // draw front faces filled
         gl.glPolygonMode(GL2.GL_BACK, GL2.GL_LINES);    // draw back faces with lines
         groundTexture = loadTexture("./roller_coaster/data/ground.jpg");
@@ -216,7 +216,7 @@ public class RollerCoaster implements GLEventListener {
 			drawRail(gl);
 			gl.glPopMatrix();
 		}
-		//drawBox(gl);
+		drawBox(gl);
 	}
 	
     public void drawRail(GL2 gl) {
@@ -250,8 +250,8 @@ public class RollerCoaster implements GLEventListener {
     
     private void drawBox(GL2 gl) {
     	gl.glPushMatrix();
-		gl.glTranslated(centerPos[pos].getX(), centerPos[pos].getY()+0.05, centerPos[pos].getZ());
-    	glut.glutSolidTeapot(0.5f);
+		gl.glTranslated(centerPos[(pos+10)%num_rails].getX(), centerPos[(pos+10)%num_rails].getY()+0.2f, centerPos[(pos+10)%num_rails].getZ());
+    	glut.glutSolidTeapot(0.2f);
     	gl.glPopMatrix();
     }
 	
@@ -362,14 +362,14 @@ public class RollerCoaster implements GLEventListener {
         // set camera location and angle
         gl.glMatrixMode(GL2.GL_MODELVIEW);
         glu.gluLookAt(centerPos[pos].getX(), centerPos[pos].getY()+1, centerPos[pos].getZ(), 
-        		centerPos[(pos+20)%num_rails].getX(), centerPos[(pos+10)%num_rails].getY(), centerPos[(pos+20)%num_rails].getZ(), 
+        		centerPos[(pos+20)%num_rails].getX(), centerPos[(pos+15)%num_rails].getY(), centerPos[(pos+10)%num_rails].getZ(), 
         		0, 1, 0);
     }
 	
     public void setLights(GL2 gl) {
-        float[] lightPos = {0, 3, 0, 1};
+        float[] lightPos = {-2, 15, -2, 1};
         float[] lightAmbient = {0.2f, 0.2f, 0.2f, 1};
-        float[] lightDiffuse = {0.9f, 0.9f, 0.9f, 1};
+        float[] lightDiffuse = {1.0f, 1.0f, 1.0f, 1};
         float[] lightSpecular = {0.8f, 0.8f, 0.8f, 1};
 
         gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_POSITION, lightPos, 0);
@@ -377,19 +377,23 @@ public class RollerCoaster implements GLEventListener {
         gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_DIFFUSE, lightDiffuse, 0);
         gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_SPECULAR, lightSpecular, 0);
 
-        if (lightMode == 1) {
-            gl.glDisable(GL2.GL_LIGHTING);
-            gl.glDisable(GL2.GL_LIGHT0);
-            gl.glDisable(GL2.GL_LIGHT1);
-        } else if (lightMode == 2) {
-            gl.glEnable(GL2.GL_LIGHTING);
-            gl.glEnable(GL2.GL_LIGHT0);
-            gl.glDisable(GL2.GL_LIGHT1);
-        } else { // mode 3
-            gl.glEnable(GL2.GL_LIGHTING); 
-            gl.glDisable(GL2.GL_LIGHT0);
-            gl.glEnable(GL2.GL_LIGHT1);
-        }
+        float[] lightPos2 = {5, 10, 5, 1};
+        gl.glLightfv(GL2.GL_LIGHT2, GL2.GL_POSITION, lightPos2, 0);
+        gl.glLightfv(GL2.GL_LIGHT2, GL2.GL_AMBIENT, lightAmbient, 0);
+        gl.glLightfv(GL2.GL_LIGHT2, GL2.GL_DIFFUSE, lightDiffuse, 0);
+        gl.glLightfv(GL2.GL_LIGHT2, GL2.GL_SPECULAR, lightSpecular, 0);
+
+        float[] lightPos3 = {0, 5, 0, 1};
+        gl.glLightfv(GL2.GL_LIGHT3, GL2.GL_POSITION, lightPos3, 0);
+        gl.glLightfv(GL2.GL_LIGHT3, GL2.GL_AMBIENT, lightAmbient, 0);
+        gl.glLightfv(GL2.GL_LIGHT3, GL2.GL_DIFFUSE, lightDiffuse, 0);
+        gl.glLightfv(GL2.GL_LIGHT3, GL2.GL_SPECULAR, lightSpecular, 0);
+
+        gl.glEnable(GL2.GL_LIGHTING); 
+        gl.glDisable(GL2.GL_LIGHT0);
+        gl.glEnable(GL2.GL_LIGHT1);
+        gl.glEnable(GL2.GL_LIGHT2);
+        gl.glEnable(GL2.GL_LIGHT3);
     }
 	
     private void update() {
