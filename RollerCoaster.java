@@ -40,12 +40,12 @@ public class RollerCoaster implements GLEventListener {
 	private static final int HEIGHT = 400;
 	private static final int X0 = 100;
 	private static final int Y0 = 50;
-	private static final int REFRESH_RATE = 15;
+	private static final int REFRESH_RATE = 20;
 	private static final int NEAR = 1;
-	private static final int FAR = 20;
+	private static final int FAR = 25;
 	private static int lightMode = 3;
 	
-	private double dtheta = 0.5;
+	private double dtheta = 0.005;
 	private double camDist = -3;
     private double camPhi = 0;    // horizontal (azimuth) angle
     private double camTheta = 0;  // vertical (elevation) angle
@@ -64,7 +64,7 @@ public class RollerCoaster implements GLEventListener {
 	private Texture[] skyTexture = new Texture[5];
 	
 	private int pos = 0;
-	private int num_rails = 400;
+	private int num_rails = 800;
 	private Point3[] centerPos = new Point3[num_rails];
 	
 	private float aspect = 1;
@@ -74,11 +74,11 @@ public class RollerCoaster implements GLEventListener {
         glut = new GLUT();
         speedProvider = new ConstantSpeedProvider().setSpeed(1);
 
-        for (int i = 0; i < num_rails/2; i++) {
-        	centerPos[i] = new Point3(0, Math.sin(i/10.0)+1, 10-i/10.0);
-        }
-        for (int i = num_rails/4; i < num_rails; i++) {
-        	centerPos[i] = new Point3(Math.atan(-10+i/10.0)*2, Math.sin(i/10.0)+1, 10-i/10.0);
+        for (int i = 0; i < num_rails; i++) {
+        	centerPos[i] = new Point3((400-i)/20.0*Math.sin(dtheta*i), 2*Math.sin(i/20.0)+2, (400-i)/20.0*Math.cos(dtheta*i));
+//        }
+//        for (int i = num_rails/4; i < num_rails; i++) {
+//        	centerPos[i] = new Point3(Math.atan(-(100-i)/20.0)*2, 3*Math.sin(i/20.0)+3, (100-i)/20.0);
         	//centerPos[i] = new Point3(10-i/10.0, Math.sin((-i/10.0)*(-i/10.0)-100)+1, (-i/10.0)*(-i/10.0)-100);
         }
         
@@ -115,12 +115,6 @@ public class RollerCoaster implements GLEventListener {
                     camPhi += 5; break;
                 case KeyEvent.VK_SPACE:
                     camDist = -3; camPhi = 0; camTheta = 0; break;
-                case KeyEvent.VK_1:
-                    lightMode = 1; break;
-                case KeyEvent.VK_2:
-                    lightMode = 2; break;
-                case KeyEvent.VK_3:
-                    lightMode = 3; break;
                 }
                 //System.out.printf("camDist=%.2g  camTheta=%d ortho=%s\n", camDist, camTheta, useOrtho);
             }
@@ -222,7 +216,7 @@ public class RollerCoaster implements GLEventListener {
 			drawRail(gl);
 			gl.glPopMatrix();
 		}
-		drawBox(gl);
+		//drawBox(gl);
 	}
 	
     public void drawRail(GL2 gl) {
@@ -257,7 +251,7 @@ public class RollerCoaster implements GLEventListener {
     private void drawBox(GL2 gl) {
     	gl.glPushMatrix();
 		gl.glTranslated(centerPos[pos].getX(), centerPos[pos].getY()+0.05, centerPos[pos].getZ());
-    	glut.glutSolidSphere(0.2f, 1, 1);
+    	glut.glutSolidTeapot(0.5f);
     	gl.glPopMatrix();
     }
 	
@@ -266,10 +260,10 @@ public class RollerCoaster implements GLEventListener {
         gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, GL.GL_REPEAT); 
         gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, GL.GL_REPEAT);
         gl.glBegin(GL2.GL_QUADS);
-            gl.glTexCoord2f(0.0f, 0.0f); gl.glVertex3f(10.0f, 0.0f,  -10.0f);  // Bottom Left Of The Texture and Quad
-            gl.glTexCoord2f(10.0f, 0.0f); gl.glVertex3f(-10.0f, 0.0f,  -10.0f);  // Bottom Right Of The Texture and Quad
-            gl.glTexCoord2f(10.0f, 10.0f); gl.glVertex3f(-10.0f,  0.0f,  10.0f);  // Top Right Of The Texture and Quad
-            gl.glTexCoord2f(0.0f, 10.0f); gl.glVertex3f(10.0f,  0.0f,  10.0f);  // Top Left Of The Texture and Quad
+            gl.glTexCoord2f(0.0f, 0.0f); gl.glVertex3f(20.0f, 0.0f,  -20.0f);  // Bottom Left Of The Texture and Quad
+            gl.glTexCoord2f(10.0f, 0.0f); gl.glVertex3f(-20.0f, 0.0f,  -20.0f);  // Bottom Right Of The Texture and Quad
+            gl.glTexCoord2f(10.0f, 10.0f); gl.glVertex3f(-20.0f,  0.0f,  20.0f);  // Top Right Of The Texture and Quad
+            gl.glTexCoord2f(0.0f, 10.0f); gl.glVertex3f(20.0f,  0.0f,  20.0f);  // Top Left Of The Texture and Quad
         gl.glEnd();
     }
     
@@ -281,46 +275,46 @@ public class RollerCoaster implements GLEventListener {
         gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, GL.GL_CLAMP_TO_EDGE); 
         gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, GL.GL_CLAMP_TO_EDGE);
         gl.glBegin(GL2.GL_QUADS);
-        gl.glTexCoord2f(0.0f, 0.0f); gl.glVertex3f(-10f, 10f,  -10f);  // Bottom Left Of The Texture and Quad
-        gl.glTexCoord2f(1.0f, 0.0f); gl.glVertex3f(10f, 10f,  -10f);  // Bottom Right Of The Texture and Quad
-        gl.glTexCoord2f(1.0f, 1.0f); gl.glVertex3f(10f, 10f,  10f);  // Top Right Of The Texture and Quad
-        gl.glTexCoord2f(0.0f, 1.0f); gl.glVertex3f(-10f, 10f, 10f);  // Top Left Of The Texture and Quad
+        gl.glTexCoord2f(0.0f, 0.0f); gl.glVertex3f(-20f, 20f,  -20f);  // Bottom Left Of The Texture and Quad
+        gl.glTexCoord2f(1.0f, 0.0f); gl.glVertex3f(20f, 20f,  -20f);  // Bottom Right Of The Texture and Quad
+        gl.glTexCoord2f(1.0f, 1.0f); gl.glVertex3f(20f, 20f,  20f);  // Top Right Of The Texture and Quad
+        gl.glTexCoord2f(0.0f, 1.0f); gl.glVertex3f(-20f, 20f, 20f);  // Top Left Of The Texture and Quad
 	    gl.glEnd();
 		
 		//draw right
 		skyTexture[3].bind(gl);
 	    gl.glBegin(GL2.GL_QUADS);
-	        gl.glTexCoord2f(0.0f, 0.0f); gl.glVertex3f(-10f, 0f,  10f);  // Bottom Left Of The Texture and Quad
-	        gl.glTexCoord2f(1.0f, 0.0f); gl.glVertex3f(-10f, 0f,  -10f);  // Bottom Right Of The Texture and Quad
-	        gl.glTexCoord2f(1.0f, 1.0f); gl.glVertex3f(-10f, 10f,  -10f);  // Top Right Of The Texture and Quad
-	        gl.glTexCoord2f(0.0f, 1.0f); gl.glVertex3f(-10f, 10f,  10f);  // Top Left Of The Texture and Quad
+	        gl.glTexCoord2f(0.0f, 0.0f); gl.glVertex3f(-20f, 0f,  20f);  // Bottom Left Of The Texture and Quad
+	        gl.glTexCoord2f(1.0f, 0.0f); gl.glVertex3f(-20f, 0f,  -20f);  // Bottom Right Of The Texture and Quad
+	        gl.glTexCoord2f(1.0f, 1.0f); gl.glVertex3f(-20f, 20f,  -20f);  // Top Right Of The Texture and Quad
+	        gl.glTexCoord2f(0.0f, 1.0f); gl.glVertex3f(-20f, 20f,  20f);  // Top Left Of The Texture and Quad
 	    gl.glEnd();
 		
 		//draw back
 		skyTexture[2].bind(gl);
 	    gl.glBegin(GL2.GL_QUADS);
-	        gl.glTexCoord2f(0.0f, 0.0f); gl.glVertex3f(10f, 0f,  10f);  // Bottom Left Of The Texture and Quad
-	        gl.glTexCoord2f(1.0f, 0.0f); gl.glVertex3f(-10f, 0f,  10f);  // Bottom Right Of The Texture and Quad
-	        gl.glTexCoord2f(1.0f, 1.0f); gl.glVertex3f(-10f, 10f,  10f);  // Top Right Of The Texture and Quad
-	        gl.glTexCoord2f(0.0f, 1.0f); gl.glVertex3f(10f, 10f,  10f);  // Top Left Of The Texture and Quad
+	        gl.glTexCoord2f(0.0f, 0.0f); gl.glVertex3f(20f, 0f,  20f);  // Bottom Left Of The Texture and Quad
+	        gl.glTexCoord2f(1.0f, 0.0f); gl.glVertex3f(-20f, 0f,  20f);  // Bottom Right Of The Texture and Quad
+	        gl.glTexCoord2f(1.0f, 1.0f); gl.glVertex3f(-20f, 20f,  20f);  // Top Right Of The Texture and Quad
+	        gl.glTexCoord2f(0.0f, 1.0f); gl.glVertex3f(20f, 20f,  20f);  // Top Left Of The Texture and Quad
 	    gl.glEnd();
 	    
 		//draw left
 	    skyTexture[1].bind(gl);
 	    gl.glBegin(GL2.GL_QUADS);
-	        gl.glTexCoord2f(0.0f, 0.0f); gl.glVertex3f(10f, 0f,  -10f);  // Bottom Left Of The Texture and Quad
-	        gl.glTexCoord2f(1.0f, 0.0f); gl.glVertex3f(10f, 0f,  10f);  // Bottom Right Of The Texture and Quad
-	        gl.glTexCoord2f(1.0f, 1.0f); gl.glVertex3f(10f, 10f,  10f);  // Top Right Of The Texture and Quad
-	        gl.glTexCoord2f(0.0f, 1.0f); gl.glVertex3f(10f, 10f,  -10f);  // Top Left Of The Texture and Quad
+	        gl.glTexCoord2f(0.0f, 0.0f); gl.glVertex3f(20f, 0f,  -20f);  // Bottom Left Of The Texture and Quad
+	        gl.glTexCoord2f(1.0f, 0.0f); gl.glVertex3f(20f, 0f,  20f);  // Bottom Right Of The Texture and Quad
+	        gl.glTexCoord2f(1.0f, 1.0f); gl.glVertex3f(20f, 20f,  20f);  // Top Right Of The Texture and Quad
+	        gl.glTexCoord2f(0.0f, 1.0f); gl.glVertex3f(20f, 20f,  -20f);  // Top Left Of The Texture and Quad
 	    gl.glEnd();
 	    
 		//draw front quad
 	    skyTexture[4].bind(gl);
 	    gl.glBegin(GL2.GL_QUADS);
-	        gl.glTexCoord2f(0.0f, 0.0f); gl.glVertex3f(-10f, 0f,  -10f);  // Bottom Left Of The Texture and Quad
-	        gl.glTexCoord2f(1.0f, 0.0f); gl.glVertex3f(10f, 0f,  -10f);  // Bottom Right Of The Texture and Quad
-	        gl.glTexCoord2f(1.0f, 1.0f); gl.glVertex3f(10f, 10f,  -10f);  // Top Right Of The Texture and Quad
-	        gl.glTexCoord2f(0.0f, 1.0f); gl.glVertex3f(-10f, 10f,  -10f);  // Top Left Of The Texture and Quad
+	        gl.glTexCoord2f(0.0f, 0.0f); gl.glVertex3f(-20f, 0f,  -20f);  // Bottom Left Of The Texture and Quad
+	        gl.glTexCoord2f(1.0f, 0.0f); gl.glVertex3f(20f, 0f,  -20f);  // Bottom Right Of The Texture and Quad
+	        gl.glTexCoord2f(1.0f, 1.0f); gl.glVertex3f(20f, 20f,  -20f);  // Top Right Of The Texture and Quad
+	        gl.glTexCoord2f(0.0f, 1.0f); gl.glVertex3f(-20f, 20f,  -20f);  // Top Left Of The Texture and Quad
 	    gl.glEnd();
 		gl.glPopMatrix();
     }
@@ -367,7 +361,9 @@ public class RollerCoaster implements GLEventListener {
         
         // set camera location and angle
         gl.glMatrixMode(GL2.GL_MODELVIEW);
-        glu.gluLookAt(centerPos[pos].getX(), centerPos[pos].getY()+1, centerPos[pos].getZ(), centerPos[pos].getX(), centerPos[pos].getY()-3, -40, 0, 1, 0);
+        glu.gluLookAt(centerPos[pos].getX(), centerPos[pos].getY()+1, centerPos[pos].getZ(), 
+        		centerPos[(pos+20)%num_rails].getX(), centerPos[(pos+10)%num_rails].getY(), centerPos[(pos+20)%num_rails].getZ(), 
+        		0, 1, 0);
     }
 	
     public void setLights(GL2 gl) {
@@ -399,7 +395,6 @@ public class RollerCoaster implements GLEventListener {
     private void update() {
 		pos += speedProvider.getSpeed(this);
 		pos %= num_rails;
-		
 	}
 	
 	public static void main(String[] args) throws FileNotFoundException {
