@@ -43,7 +43,6 @@ public class RollerCoaster implements GLEventListener {
 	private static final int REFRESH_RATE = 30;
 	private static final int NEAR = 1;
 	private static final int FAR = 25;
-	private static int lightMode = 3;
 	
 	private double dtheta = 0.008;
 	private double camDist = -3;
@@ -58,6 +57,7 @@ public class RollerCoaster implements GLEventListener {
 	private GLU glu;
 	private GLUT glut;
 	private SpeedProvider speedProvider;
+	private int speed;
 	
 	private Texture groundTexture;
 	private Texture railTexture;
@@ -73,6 +73,7 @@ public class RollerCoaster implements GLEventListener {
         glu = new GLU();
         glut = new GLUT();
         speedProvider = new ConstantSpeedProvider().setSpeed(1);
+        speed = speedProvider.getSpeed(this);
 
         for (int i = 0; i < num_rails; i++) {
         	centerPos[i] = new Point3((400-i)/20.0*Math.sin(dtheta*i), 2*Math.sin(i/20.0)+2, (400-i)/20.0*Math.cos(dtheta*i));
@@ -104,7 +105,9 @@ public class RollerCoaster implements GLEventListener {
                 case KeyEvent.VK_SHIFT:
                     shiftKeyDown = true; break;
                 case KeyEvent.VK_A:
-                    dtheta += 0.01; break;
+                    speed += 1; break;
+                case KeyEvent.VK_S:
+                    speed = Math.max(0, speed-1); break;
                 case KeyEvent.VK_UP:
                     camDist += shiftKeyDown ? 1 : .2; break;
                 case KeyEvent.VK_DOWN:
@@ -114,7 +117,7 @@ public class RollerCoaster implements GLEventListener {
                 case KeyEvent.VK_RIGHT:
                     camPhi += 5; break;
                 case KeyEvent.VK_SPACE:
-                    camDist = -3; camPhi = 0; camTheta = 0; break;
+                    speed = 0; break;
                 }
                 //System.out.printf("camDist=%.2g  camTheta=%d ortho=%s\n", camDist, camTheta, useOrtho);
             }
@@ -165,6 +168,11 @@ public class RollerCoaster implements GLEventListener {
         //gl.glEnable(GL2.GL_DEPTH_TEST);     // Enables Depth Testing
         gl.glPolygonMode(GL2.GL_FRONT, GL2.GL_FILL);    // draw front faces filled
         gl.glPolygonMode(GL2.GL_BACK, GL2.GL_LINES);    // draw back faces with lines
+        gl.glHint(GL2.GL_PERSPECTIVE_CORRECTION_HINT, GL2.GL_NICEST);	// Really Nice Perspective Calculations
+		gl.glShadeModel(GL2.GL_SMOOTH); 
+		gl.glColor4f(1.0f,1.0f,1.0f,0.5f);                  // Full Brightness, 50% Alpha ( NEW )
+        gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE);       // Blending Function For Translucency Based On Source Alpha Value ( NEW )
+        
         groundTexture = loadTexture("./roller_coaster/data/ground.jpg");
         skyTexture[0] = loadTexture("./roller_coaster/data/otop7.jpg");
         skyTexture[1] = loadTexture("./roller_coaster/data/oleft7.jpg");
@@ -227,7 +235,7 @@ public class RollerCoaster implements GLEventListener {
         for (int i = 1; i < Parser.faces.length; i++){
         	gl.glPushMatrix();
         	gl.glBegin(GL2.GL_QUADS);
-        	gl.glColor3i(255, 166, 30);
+        	gl.glColor3i(255, 255, 255);
         	gl.glNormal3f(Parser.normals[Parser.faces[i].a_n].nx, Parser.normals[Parser.faces[i].a_n].ny, Parser.normals[Parser.faces[i].a_n].nz);
        	
         	gl.glTexCoord2f(0.0f, 0.0f); 
@@ -363,12 +371,12 @@ public class RollerCoaster implements GLEventListener {
         gl.glMatrixMode(GL2.GL_MODELVIEW);
         glu.gluLookAt(centerPos[pos].getX(), centerPos[pos].getY()+1, centerPos[pos].getZ(), 
         		centerPos[(pos+20)%num_rails].getX(), centerPos[(pos+15)%num_rails].getY(), centerPos[(pos+10)%num_rails].getZ(), 
-        		0, 1, 0);
+        		centerPos[(pos)%num_rails].getX(), 1, 0);
     }
 	
     public void setLights(GL2 gl) {
         float[] lightPos = {-2, 15, -2, 1};
-        float[] lightAmbient = {0.2f, 0.2f, 0.2f, 1};
+        float[] lightAmbient = { 1.0f,  1.0f, 1.0f, 1};
         float[] lightDiffuse = {1.0f, 1.0f, 1.0f, 1};
         float[] lightSpecular = {0.8f, 0.8f, 0.8f, 1};
 
@@ -397,7 +405,7 @@ public class RollerCoaster implements GLEventListener {
     }
 	
     private void update() {
-		pos += speedProvider.getSpeed(this);
+		pos += speed;
 		pos %= num_rails;
 	}
 	
