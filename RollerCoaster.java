@@ -56,7 +56,7 @@ public class RollerCoaster implements GLEventListener {
 	private GLUT glut;
 	private SpeedProvider speedProvider;
 	private int speed;
-    TextRenderer renderer = new TextRenderer(new Font("SansSerif", Font.PLAIN, 12));
+    TextRenderer renderer = new TextRenderer(new Font("SansSerif", Font.PLAIN, 16));
     
 	private Texture groundTexture;
 	private Texture railTexture;
@@ -76,7 +76,7 @@ public class RollerCoaster implements GLEventListener {
         speed = speedProvider.getSpeed(this);
 
         for (int i = 0; i < num_rails; i++) {
-        	centerPos[i] = new Point3(0.5*(num_rails/2-i)/20.0*Math.sin(dtheta*i), 2*Math.sin(i/20.0)+2, 0.5*(num_rails/2-i)/20.0*Math.cos(dtheta*i));
+        	centerPos[i] = new Point3(0.5*(-i)/20.0*Math.sin(dtheta*i), 2*Math.sin(i/20.0)+2, 0.5*(-i)/20.0*Math.cos(dtheta*i));
         }
         
 		window = GLWindow.create(new GLCapabilities(GLProfile.getDefault()));
@@ -107,7 +107,6 @@ public class RollerCoaster implements GLEventListener {
                 case KeyEvent.VK_SPACE:
                     pause = !pause; break;
                 }
-                //System.out.printf("camDist=%.2g  camTheta=%d ortho=%s\n", camDist, camTheta, useOrtho);
             }
         });
         animator = new FPSAnimator(window, REFRESH_RATE);
@@ -144,7 +143,7 @@ public class RollerCoaster implements GLEventListener {
         }
 
         renderText(drawable);
-        gl.glFlush();
+        //gl.glFlush();
 	}
 
 	@Override
@@ -399,12 +398,12 @@ public class RollerCoaster implements GLEventListener {
 	
     public void renderText(GLAutoDrawable drawable) {
         int w = drawable.getWidth(), h = drawable.getHeight();
-        renderer.setColor(1, 1, 1, 0.8f);
+        renderer.setColor(0, 0, 0, 0.8f);
         renderer.beginRendering(w, h);
         String st = "<Up/Down Arrows: Increase/Decrease Speed";
-        renderer.draw(st, 5, h-14);
+        renderer.draw(st, 20, h-24);
         st = "Space: pause/resume; F: first-person/third-persn view";
-        renderer.draw(st, 5, h-28);
+        renderer.draw(st, 20, h-48);
         st += (firstPerson ? "first person" : "third person") + " view";
         renderer.draw(st, 5, 5);
         renderer.endRendering();
