@@ -3,16 +3,16 @@ import java.io.*;
 import java.util.Scanner;
 
 public class Parser {
-  public static Vertex3[] vertices;
-  public static Face8[] faces;
-  public static Normal3[] normals;
+  public Vertex3[] vertices;
+  public Face8[] faces;
+  public Normal3[] normals;
   private Mode mode;
   private enum Mode {
 	    VERTICES, FACES, NORMALS 
 	}
-  private final static int MAX_V = 1000;
-  private final static int MAX_F = 1000;
-  private final static int MAX_N = 1000;
+  private final static int MAX_V = 9000;
+  private final static int MAX_F = 9000;
+  private final static int MAX_N = 9000;
   
   private int num_v = 1; //counting start at 1!
   private int num_f = 1; //counting start at 1!
