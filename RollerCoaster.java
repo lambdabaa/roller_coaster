@@ -60,7 +60,7 @@ public class RollerCoaster implements GLEventListener {
     
 	private Texture groundTexture;
 	private Texture railTexture;
-	private Texture cartTexture;
+	//private Texture cartTexture;
 	private Texture[] skyTexture = new Texture[5];
 	
 	private int pos = 0;
@@ -76,7 +76,9 @@ public class RollerCoaster implements GLEventListener {
         speed = speedProvider.getSpeed(this);
 
         for (int i = 0; i < num_rails; i++) {
-        	centerPos[i] = new Point3(0.5*(-i)/20.0*Math.sin(dtheta*i), 2*Math.sin(i/20.0)+2, 0.5*(-i)/20.0*Math.cos(dtheta*i));
+        	
+        	//centerPos[i] = new Point3(0.3*10.0*Math.sin(dtheta*i), 0, 0.3*10.0*Math.cos(dtheta*i));
+        	centerPos[i] = new Point3(0.3*(i)/20.0*Math.sin(dtheta*i), 3*Math.sin(i/20.0)+3, 0.3*(i)/20.0*Math.cos(dtheta*i));
         }
         
 		window = GLWindow.create(new GLCapabilities(GLProfile.getDefault()));
@@ -133,11 +135,11 @@ public class RollerCoaster implements GLEventListener {
         skyTexture[3] = loadTexture("./roller_coaster/data/oright7.jpg");
         skyTexture[4] = loadTexture("./roller_coaster/data/ofront7.jpg");
         railTexture = loadTexture("./roller_coaster/data/wood2.jpg");
-        cartTexture = loadTexture("./roller_coaster/data/light_wood.jpg");
+        //cartTexture = loadTexture("./roller_coaster/data/light_wood.jpg");
         if(groundTexture == null)
         	System.exit(0);
         groundTexture.enable(gl);
-        cartTexture.enable(gl);
+        //cartTexture.enable(gl);
         for (int i = 0; i < 5; i++){
         	skyTexture[i].enable(gl);
         }
@@ -215,28 +217,42 @@ public class RollerCoaster implements GLEventListener {
     }
     
     private void drawCart(GL2 gl) {
-    	cartTexture.bind(gl);
+    	//cartTexture.bind(gl);
+    	gl.glPushMatrix();
     	gl.glTranslated(centerPos[(pos+5)%num_rails].getX(), centerPos[(pos+5)%num_rails].getY()+0.05f, centerPos[(pos+5)%num_rails].getZ());
-    	gl.glRotated(180, 0, 1, 0);
+    	gl.glRotated(90, 0, 1, 0);
+    	Vector3 direction = new Vector3();
+    	//System.out.println(centerPos[(pos+5)%num_rails+" "+direction.getZ()+" "+degree);
+    	direction.sub(centerPos[(pos+1)%num_rails], centerPos[pos]);
+    	direction.setY(0);
+    	//direction.setZ(-direction.getZ());
+    	direction.normalize();
+    	double degree = direction.dot(new Vector3(-1, 0, 0)) * 180.0/Math.PI; 
+    	System.out.println(direction.getX()+" "+direction.getZ()+" "+degree);
+    	gl.glRotated(degree, 0, 1, 0);
     	gl.glScaled(8.0d, 8.0d, 8.0d);
-    	for (int i = 1; i < parser2.faces.length; i++){
-        	gl.glPushMatrix();
-        	gl.glBegin(GL2.GL_QUADS);
-        	gl.glColor3i(255, 255, 255);
-        	gl.glNormal3f(parser2.normals[parser2.faces[i].a_n].nx, parser2.normals[parser2.faces[i].a_n].ny, parser2.normals[parser2.faces[i].a_n].nz);
-        	gl.glTexCoord2f(0.0f, 0.0f); 
-        	gl.glVertex3f(parser2.vertices[parser2.faces[i].a].x,parser2.vertices[parser2.faces[i].a].y, parser2.vertices[parser2.faces[i].a].z ); 
-            gl.glTexCoord2f(1.0f, 0.0f); 
-            gl.glVertex3f(parser2.vertices[parser2.faces[i].b].x,parser2.vertices[parser2.faces[i].b].y, parser2.vertices[parser2.faces[i].b].z ); 
-            gl.glTexCoord2f(1.0f, 1.0f); 
-            gl.glVertex3f(parser2.vertices[parser2.faces[i].c].x,parser2.vertices[parser2.faces[i].c].y, parser2.vertices[parser2.faces[i].c].z ); 
-            gl.glTexCoord2f(0.0f, 1.0f); 
-            gl.glVertex3f(parser2.vertices[parser2.faces[i].d].x,parser2.vertices[parser2.faces[i].d].y, parser2.vertices[parser2.faces[i].d].z ); 
-            
-        	gl.glEnd();
-        	gl.glPopMatrix();
-        	if (parser2.faces[i+1] == null) break;
-        }
+    	glut.glutSolidTeapot(0.05); 
+//    	for (int i = 1; i < parser2.faces.length; i++){
+//        	gl.glPushMatrix();
+//        	gl.glBegin(GL2.GL_QUADS);
+//        	gl.glColor3i(255, 255, 255);
+//    	    gl.glNormal3f(parser2.normals[parser2.faces[i].a_n].nx, parser2.normals[parser2.faces[i].a_n].ny, parser2.normals[parser2.faces[i].a_n].nz);
+//        	gl.glTexCoord2f(0.0f, 0.0f); 
+//        	gl.glVertex3f(parser2.vertices[parser2.faces[i].a].x,parser2.vertices[parser2.faces[i].a].y, parser2.vertices[parser2.faces[i].a].z ); 
+//	    gl.glNormal3f(parser2.normals[parser2.faces[i].b_n].nx, parser2.normals[parser2.faces[i].b_n].ny, parser2.normals[parser2.faces[i].b_n].nz);
+//            gl.glTexCoord2f(1.0f, 0.0f); 
+//            gl.glVertex3f(parser2.vertices[parser2.faces[i].b].x,parser2.vertices[parser2.faces[i].b].y, parser2.vertices[parser2.faces[i].b].z ); 
+//	    gl.glNormal3f(parser2.normals[parser2.faces[i].c_n].nx, parser2.normals[parser2.faces[i].c_n].ny, parser2.normals[parser2.faces[i].c_n].nz);
+//            gl.glTexCoord2f(1.0f, 1.0f); 
+//            gl.glVertex3f(parser2.vertices[parser2.faces[i].c].x,parser2.vertices[parser2.faces[i].c].y, parser2.vertices[parser2.faces[i].c].z ); 
+//	    gl.glNormal3f(parser2.normals[parser2.faces[i].d_n].nx, parser2.normals[parser2.faces[i].d_n].ny, parser2.normals[parser2.faces[i].d_n].nz);
+//            gl.glTexCoord2f(0.0f, 1.0f); 
+//            gl.glVertex3f(parser2.vertices[parser2.faces[i].d].x,parser2.vertices[parser2.faces[i].d].y, parser2.vertices[parser2.faces[i].d].z ); 
+//            
+//        	gl.glEnd();
+//        	gl.glPopMatrix();
+//        	if (parser2.faces[i+1] == null) break;
+//        }
     	gl.glPopMatrix();
     }
 	
@@ -391,7 +407,7 @@ public class RollerCoaster implements GLEventListener {
 	
 	public static void main(String[] args) throws FileNotFoundException {
         parser = new Parser("./roller_coaster/untitled2.obj");
-        parser2 = new Parser("./roller_coaster/dinghy.obj");
+        //parser2 = new Parser("./roller_coaster/dinghy.obj");
 		LOGGER.info("Starting scene rendering...");
 		new RollerCoaster();
 	}
