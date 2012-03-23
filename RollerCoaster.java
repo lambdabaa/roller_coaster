@@ -9,7 +9,6 @@ import java.awt.Font;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.URL;
 import java.util.logging.Logger;
 
 import javax.media.opengl.GL;
@@ -20,22 +19,20 @@ import javax.media.opengl.GLEventListener;
 import javax.media.opengl.GLProfile;
 import javax.media.opengl.glu.GLU;
 
-import roller_coaster.Parser;
-
-import com.jogamp.opengl.util.awt.TextRenderer;
-import com.jogamp.opengl.util.gl2.GLUT;
-import com.jogamp.opengl.util.texture.Texture;
-import com.jogamp.opengl.util.texture.TextureIO;
 import com.jogamp.newt.event.KeyAdapter;
 import com.jogamp.newt.event.KeyEvent;
 import com.jogamp.newt.event.WindowAdapter;
 import com.jogamp.newt.event.WindowEvent;
 import com.jogamp.newt.opengl.GLWindow;
 import com.jogamp.opengl.util.FPSAnimator;
+import com.jogamp.opengl.util.awt.TextRenderer;
+import com.jogamp.opengl.util.gl2.GLUT;
+import com.jogamp.opengl.util.texture.Texture;
+import com.jogamp.opengl.util.texture.TextureIO;
 
 
 public class RollerCoaster implements GLEventListener {
-	private static final Logger LOGGER = Logger.getLogger(RollerCoaster.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(RollerCoaster.class.getName());
 	private static final int WIDTH = 800;
 	private static final int HEIGHT = 600;
 	private static final int X0 = 100;
@@ -55,7 +52,6 @@ public class RollerCoaster implements GLEventListener {
 	private GLU glu;
 	private GLUT glut;
 	private SpeedProvider speedProvider;
-	private int speed;        // TODO(garethaye): Move this to SpeedProvider...
   TextRenderer renderer = new TextRenderer(new Font("SansSerif", Font.PLAIN, 16));
   
 	private Texture groundTexture;
@@ -73,7 +69,6 @@ public class RollerCoaster implements GLEventListener {
 	  glu = new GLU();
     glut = new GLUT();
     speedProvider = new ConstantSpeedProvider().setSpeed(1);
-    speed = speedProvider.getSpeed(this);
     
     for (int i = 0; i < num_rails; i++) {
       centerPos[i] = 
@@ -99,21 +94,21 @@ public class RollerCoaster implements GLEventListener {
     window.addKeyListener(new KeyAdapter() {
       public void keyPressed(KeyEvent ke) {
         switch (ke.getKeyCode()) {
-          case KeyEvent.VK_ESCAPE:
-          case KeyEvent.VK_Q:
-            System.exit(0);
-          case KeyEvent.VK_F:
-            firstPerson = !firstPerson;
-            break;
-          case KeyEvent.VK_UP:
-            speed += 1;
-            break;
-          case KeyEvent.VK_DOWN:
-            speed = Math.max(0, speed - 1);
-            break;
-          case KeyEvent.VK_SPACE:
-            pause = !pause;
-            break;
+        case KeyEvent.VK_ESCAPE:
+        case KeyEvent.VK_Q:
+          System.exit(0);
+        case KeyEvent.VK_F:
+          firstPerson = !firstPerson;
+          break;
+        case KeyEvent.VK_UP:
+          speedProvider.speedUp();
+          break;
+        case KeyEvent.VK_DOWN:
+          speedProvider.slowDown();
+          break;
+        case KeyEvent.VK_SPACE:
+          pause = !pause;
+          break;
         }
       }
     });
@@ -211,34 +206,35 @@ public class RollerCoaster implements GLEventListener {
 	    gl.glPushMatrix();
 	    gl.glBegin(GL2.GL_QUADS);
 	    gl.glColor3i(255, 255, 255);
-      gl.glNormal3f(
-          parser.normals[parser.faces[i].a_n].nx,
-          parser.normals[parser.faces[i].a_n].ny,
-          parser.normals[parser.faces[i].a_n].nz);
-      gl.glTexCoord2f(0.0f, 0.0f); 
-      gl.glVertex3f(
-          parser.vertices[parser.faces[i].a].x,
-          parser.vertices[parser.faces[i].a].y,
-          parser.vertices[parser.faces[i].a].z); 
-      gl.glTexCoord2f(1.0f, 0.0f); 
-      gl.glVertex3f(
-          parser.vertices[parser.faces[i].b].x,
-          parser.vertices[parser.faces[i].b].y, 
-          parser.vertices[parser.faces[i].b].z); 
-      gl.glTexCoord2f(1.0f, 1.0f); 
-      gl.glVertex3f(
-          parser.vertices[parser.faces[i].c].x,
-          parser.vertices[parser.faces[i].c].y,
-          parser.vertices[parser.faces[i].c].z); 
-      gl.glTexCoord2f(0.0f, 1.0f); 
-      gl.glVertex3f(
-          parser.vertices[parser.faces[i].d].x,
-          parser.vertices[parser.faces[i].d].y,
-          parser.vertices[parser.faces[i].d].z); 
-      gl.glEnd();
-      gl.glPopMatrix();
-    }
-    
+	    gl.glNormal3f(
+	    	parser.normals[parser.faces[i].a_n].nx,
+	    	parser.normals[parser.faces[i].a_n].ny,
+	    	parser.normals[parser.faces[i].a_n].nz);
+	    gl.glTexCoord2f(0.0f, 0.0f); 
+	    gl.glVertex3f(
+	    	parser.vertices[parser.faces[i].a].x,
+	    	parser.vertices[parser.faces[i].a].y,
+	    	parser.vertices[parser.faces[i].a].z); 
+	    gl.glTexCoord2f(1.0f, 0.0f); 
+	    gl.glVertex3f(
+	    	parser.vertices[parser.faces[i].b].x,
+	    	parser.vertices[parser.faces[i].b].y, 
+	    	parser.vertices[parser.faces[i].b].z); 
+	    gl.glTexCoord2f(1.0f, 1.0f); 
+	    gl.glVertex3f(
+	    	parser.vertices[parser.faces[i].c].x,
+	    	parser.vertices[parser.faces[i].c].y,
+	    	parser.vertices[parser.faces[i].c].z); 
+	    gl.glTexCoord2f(0.0f, 1.0f); 
+	    gl.glVertex3f(
+	    	parser.vertices[parser.faces[i].d].x,
+	    	parser.vertices[parser.faces[i].d].y,
+	    	parser.vertices[parser.faces[i].d].z); 
+	    gl.glEnd();
+	    gl.glPopMatrix();
+	  }
+	}
+	
     private void drawCart(GL2 gl) {
     	cartTexture.bind(gl);
     	gl.glPushMatrix();
@@ -476,7 +472,7 @@ public class RollerCoaster implements GLEventListener {
     }
 	
   private void update() {
-		pos += speed;
+		pos += speedProvider.getSpeed(this);
 		pos %= num_rails;
 	}
 	

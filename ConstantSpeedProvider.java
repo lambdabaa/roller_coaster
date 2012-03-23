@@ -14,4 +14,19 @@ public class ConstantSpeedProvider implements SpeedProvider {
 		return speed;
 	}
 
+  @Override
+  public SpeedProvider speedUp() {
+    speed += 1;
+    return this;
+  }
+
+  @Override
+  public SpeedProvider slowDown() {
+    if (speed > 0) {
+      speed -= 1;
+    }
+    
+    return this;
+  }
+
 }
